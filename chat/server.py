@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import zmq
 
+#For broadcasts
 room = "tcp://127.0.0.1:6000"
+#For join/leave controls
 ctrl = "tcp://127.0.0.1:6001"
 
 class Server(object):
@@ -11,37 +13,34 @@ class Server(object):
         self.pub = self.ctx.socket(zmq.PUB)
         self.pub.bind(rm)
 
-        self.ctrl = self.ctx.socket(zmq.SUB)
-        self.ctrl.connect(ctrl)
+        self.ctrl = self.ctx.socket(zmq.REP)
+        self.ctrl.bind(ctrl)
 
     def run(self):
         '''run the service now'''
-        #Receive messages from ctrl 
-        msg = self.ctrl.recv()
-        src, cont = msg.split(':')
-        type, _ = cont.split('-')
-        if type == 'LOGIN':
-            self.login(src)
-        else:
-            if type == 'LOGOUT':
-                self.logout(src)
+        while True:
+            #Receive messages from ctrl 
+            msg = self.ctrl.recv()
+            print "received msg: %s" %msg
+            self.ctrl.send("okay")
+
+            src, cont = msg.split(':')
+            type, _ = cont.split('-')
+            if type == 'LOGIN':
+                self.login(src)
             else:
-                self.publish(msg)
+                if type == 'LOGOUT':
+                    self.logout(src)
+                else:
+                    self.pub.send(msg)
     
     def login(self, usr):
         '''login process'''
-        self.pub.send("%s -> ALL: User %s joined this room!"%(usr, usr))
+        self.pub.send("%s:ALL-User %s joined this room!"%(usr, usr))
 
     def logout(self, usr):
         '''logout '''
-        self.pub.send("%s -> ALL: User %s leaved this room!"%(usr, usr))
-
-    def publish(self, msg):
-        '''publish the normal messages'''
-        #mssage like   BOB: Alice -  How are you?  => BOB -> Alice: How are you
-        src, cont = msg.split(':')
-        target, body = cont.split('-')
-        self.pub.send("%s -> %s: %s" % (src, target, body)) 
+        self.pub.send("%s:ALL-User %s leaved this room!"%(usr, usr))
 
 if __name__ == '__main__':
     Server(room, ctrl).run()
