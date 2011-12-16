@@ -8,7 +8,6 @@ ctrl = "tcp://127.0.0.1:6001"
 
 class Server(object):
     def __init__(self, rm, ctrl):
-        self.room = rm
         self.ctx = zmq.Context()
         self.pub = self.ctx.socket(zmq.PUB)
         self.pub.bind(rm)
@@ -25,11 +24,11 @@ class Server(object):
             self.ctrl.send("okay")
 
             src, cont = msg.split(':')
-            type, _ = cont.split('-')
-            if type == 'LOGIN':
+            target, _ = cont.split('-')
+            if target == 'LOGIN':
                 self.login(src)
             else:
-                if type == 'LOGOUT':
+                if target == 'LOGOUT':
                     self.logout(src)
                 else:
                     self.pub.send(msg)
