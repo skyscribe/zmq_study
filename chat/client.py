@@ -1,34 +1,9 @@
 #!/usr/bin/env python
-from select import select
 import sys
 from server import ctrl
 from server import room
 import zmq
-from threading import Thread
-
-class CLIThread(Thread):
-    def __init__(self, sock):
-        Thread.__init__(self)
-        self.sock = sock
-        self.hint = 'Input message in format: <toUser>:<msg> or quit #' 
-    def run(self):
-        while True:
-            sys.stdout.flush()
-            rlist,_,_ = select([sys.stdin], [], [], 5)
-            if rlist:
-                input = sys.stdin.readline()
-                input = input.strip()
-                if len(input) > 0 and input[0] == "?":
-                    print self.hint
-                    continue
-
-                self.sock.send(input)
-                msg = self.sock.recv()
-                if msg == "quit":
-                    print "quitting..."
-                    break
-        sys.stdout.flush()
-
+from cli import CLIThread
 
 class Client(object):
     def __init__(self, name, rm, ctrl):
@@ -51,7 +26,7 @@ class Client(object):
 
         notif = self.ctx.socket(zmq.REQ)
         notif.connect(self.channel)
-        self.cliThread = CLIThread(notif)
+        self.cliThread = CLIThread(notif, 'Input message in format: <toUser>:<msg> or quit #')
         self.cliThread.start()
 
         self.poller = zmq.Poller()
@@ -100,7 +75,7 @@ class Client(object):
             input = input.strip()
             if len(input) > 0 and input[0] == 'q':
                 self.checker.send('quit')
-                self.quit()
+                #self.quit()
                 return False
             else:
                 print "~~~ input: %s ignored!"%input
@@ -114,6 +89,5 @@ class Client(object):
         self.cliThread.join()
 
 if __name__ == '__main__':
-    import sys
     Client(sys.argv[1], room, ctrl).run()
 
