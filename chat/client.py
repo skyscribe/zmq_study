@@ -89,5 +89,8 @@ class Client(object):
         self.cliThread.join()
 
 if __name__ == '__main__':
-    Client(sys.argv[1], room, ctrl).run()
-
+    if len(sys.argv) == 1:
+        print "Usage: %s <username>"%sys.argv[0]
+        sys.exit(1)
+    else:
+        Client(sys.argv[1], room, ctrl).run()
