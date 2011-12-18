@@ -24,9 +24,7 @@ class Client(object):
         self.checker = self.ctx.socket(zmq.REP)
         self.checker.bind(self.channel)
 
-        notif = self.ctx.socket(zmq.REQ)
-        notif.connect(self.channel)
-        self.cliThread = CLIThread(notif, 'Input message in format: <toUser>:<msg> or quit #')
+        self.cliThread = CLIThread(self.ctx, self.channel, 'Input message in format: <toUser>:<msg> or quit #')
         self.cliThread.start()
 
         self.poller = zmq.Poller()

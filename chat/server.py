@@ -19,9 +19,7 @@ class Server(object):
         ipc = "ipc://server-internal"
         self.cliSock = self.ctx.socket(zmq.REP)
         self.cliSock.bind(ipc)
-        notif = self.ctx.socket(zmq.REQ)
-        notif.connect(ipc)
-        self.cliThread = CLIThread(notif, 'Input q to quit, ? for help')
+        self.cliThread = CLIThread(self.ctx, ipc, 'Input q to quit, ? for help')
         self.cliThread.start()
 
         self.poller = zmq.Poller()

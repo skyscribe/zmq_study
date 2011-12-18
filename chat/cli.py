@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 from select import select
+import zmq
 import sys
 from threading import Thread
 
 
 class CLIThread(Thread):
     '''A CLI thread for interactive input'''
-    def __init__(self, ipc, hint):
+    def __init__(self, ctx, ipc, hint):
         Thread.__init__(self)
-        self.sock = ipc
+        self.sock = ctx.socket(zmq.REQ)
+        self.sock.connect(ipc)
         self.hint = hint
 
     def run(self):
